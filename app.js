@@ -11,5 +11,22 @@ const tabs=[...document.querySelectorAll('.category-tab')];
 if(tabs.length){function selectTab(id,update=true){const selected=tabs.find(t=>t.dataset.category===id)||tabs[0];tabs.forEach(t=>{const active=t===selected;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1});document.querySelectorAll('.offering-panel').forEach(p=>{const active=p.id===selected.getAttribute('aria-controls');p.hidden=!active;p.classList.toggle('tab-transition',active)});if(update){const url=new URL(location.href);url.searchParams.set('category',selected.dataset.category);history.replaceState(null,'',url)}}tabs.forEach((t,i)=>{t.addEventListener('click',()=>selectTab(t.dataset.category));t.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight')next=(i+1)%tabs.length;if(e.key==='ArrowLeft')next=(i-1+tabs.length)%tabs.length;if(e.key==='Home')next=0;if(e.key==='End')next=tabs.length-1;if(next!==undefined){e.preventDefault();selectTab(tabs[next].dataset.category);tabs[next].focus()}})});selectTab(new URLSearchParams(location.search).get('category'),false);window.addEventListener('popstate',()=>selectTab(new URLSearchParams(location.search).get('category'),false))}
 const form=document.querySelector('.contact-form');
 if(form){const service=new URLSearchParams(location.search).get('service');const option=[...form.querySelectorAll('option')].find(o=>o.dataset.category===service);if(option)option.selected=true}
-form?.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const data=new FormData(form);const subject=`Website enquiry: ${data.get('service')} — ${data.get('company')||data.get('name')}`;const body=`Name: ${data.get('name')}\nEmail: ${data.get('email')}\nPhone: ${data.get('phone')||'Not provided'}\nCompany: ${data.get('company')||'Not provided'}\nInterest: ${data.get('service')}\n\n${data.get('message')}`;window.location.href='mailto:admin@globalis.co.in?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);document.querySelector('.form-result').textContent='Your email draft is ready in your email app. Please send it to complete your enquiry. You can also contact admin@globalis.co.in directly.'});
+form?.addEventListener('submit',async e=>{
+ e.preventDefault();if(!form.reportValidity()||form.dataset.sending==='true')return;
+ const data=new FormData(form),result=form.querySelector('.form-result'),button=form.querySelector('button[type=submit]');
+ if(data.get('_honey'))return;
+ const payload=Object.fromEntries(data.entries());
+ payload._subject='New website enquiry | Global Integrated Solutions';
+ payload._template='table';payload._url=location.href;
+ payload._replyto=String(data.get('email')).trim();
+ form.dataset.sending='true';button.disabled=true;button.textContent='Sending…';result.textContent='Sending your enquiry…';result.dataset.state='pending';
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+ try{
+  const response=await fetch('https://formsubmit.co/ajax/admin@globalis.co.in',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+  const reply=await response.json();
+  if(!response.ok||!(reply.success===true||reply.success==='true'))throw new Error('Submission rejected');
+  result.textContent='Thank you. Your enquiry has been submitted. Our team will get in touch with you.';result.dataset.state='success';form.reset();
+ }catch(error){result.textContent='We could not confirm your submission. Your details are still here. Please try again or email admin@globalis.co.in.';result.dataset.state='error';}
+ finally{clearTimeout(timer);form.dataset.sending='false';button.disabled=false;button.textContent='Send enquiry ↗';}
+});
 if(!reduceMotion){const scenes=[...document.querySelectorAll('.scene-image')];let pending=false;function updateScenes(){scenes.forEach(img=>{const r=img.parentElement.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight){const progress=(innerHeight-r.top)/(innerHeight+r.height);img.style.transform=`translateY(${(progress-.5)*40}px) scale(${1+progress*.025})`}});pending=false}addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(updateScenes)}},{passive:true});updateScenes()}
