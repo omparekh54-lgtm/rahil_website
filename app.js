@@ -24,7 +24,7 @@ form?.addEventListener('submit',async e=>{
  try{
   const response=await fetch('https://formsubmit.co/ajax/admin@globalis.co.in',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
   const reply=await response.json();
-  if(!response.ok||!(reply.success===true||reply.success==='true')){console.warn('Contact form delivery status',response.status,reply.message||'Provider rejected submission');throw new Error('Submission rejected');}
+  if(!response.ok||!(reply.success===true||reply.success==='true')){if(/needs activation/i.test(reply.message||'')){result.textContent='Online enquiries are being activated. Please email admin@globalis.co.in directly for now.';result.dataset.state='error';return;}console.warn('Contact form delivery status',response.status,reply.message||'Provider rejected submission');throw new Error('Submission rejected');}
   result.textContent='Thank you. Your enquiry has been submitted. Our team will get in touch with you.';result.dataset.state='success';form.reset();
  }catch(error){result.textContent='We could not confirm your submission. Your details are still here. Please try again or email admin@globalis.co.in.';result.dataset.state='error';}
  finally{clearTimeout(timer);form.dataset.sending='false';button.disabled=false;button.textContent='Send enquiry ↗';}
