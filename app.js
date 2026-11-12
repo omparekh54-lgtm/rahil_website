@@ -3,9 +3,18 @@
   window.SALESBUDDY_WIDGET_KEY = "d1624dae-34ea-4b61-a32b-39989ffa8beb";
   window.SALESBUDDY_BACKEND_URL = "https://salesbuddyy.onrender.com";
 
-  // Keep the existing WhatsApp shortcut clear of the chatbot launcher.
+  // Stack the chatbot above WhatsApp, keeping both launchers accessible.
   const style = document.createElement('style');
-  style.textContent = '.whatsapp-float{left:max(20px,env(safe-area-inset-left));right:auto}@media(max-width:850px){.whatsapp-float{left:max(16px,env(safe-area-inset-left));right:auto}}';
+  style.textContent = `
+    .sb-widget-bubble,.sb-widget-panel{left:auto!important;right:max(20px,env(safe-area-inset-right))!important}
+    .sb-widget-bubble{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+    .sb-widget-panel{bottom:calc(154px + env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 174px - env(safe-area-inset-bottom))!important}
+    @media(max-width:850px){
+      .sb-widget-bubble,.sb-widget-panel{right:max(16px,env(safe-area-inset-right))!important}
+      .sb-widget-bubble{bottom:calc(80px + env(safe-area-inset-bottom))!important;width:52px!important;height:52px!important}
+      .sb-widget-panel{bottom:calc(142px + env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 162px - env(safe-area-inset-bottom))!important}
+    }
+  `;
   document.head.appendChild(style);
 
   if (!document.querySelector('script[src="https://salesbuddyy.onrender.com/widget.js"]')) {
